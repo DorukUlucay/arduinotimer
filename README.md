@@ -1,2 +1,3 @@
 # arduinotimer
-a desktop pomodoro timer with arduino and lcd screen
+
+a timer to put on my desk made with arduino and lcd display.
