@@ -1,17 +1,24 @@
-//YWROBOT
-//Compatible with the Arduino IDE 1.0
-//Library version:1.1
 #include <Wire.h>
 #include <LiquidCrystal_I2C.h>
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
 
+const int buttonPin = 2;
+int buttonState = LOW;
+int lastButtonState = LOW;
+unsigned long lastDebounceTime = 0;
+unsigned long debounceDelay = 50;
+unsigned long start = 0;
+
 void setup()
 {
   lcd.init();
   lcd.backlight();
+  pinMode(buttonPin, INPUT);
+  unsigned long start = millis();
 }
 
+bool playing = false;
 int hours = 0;
 int minutes = 0;
 int seconds = 0;
@@ -22,26 +29,57 @@ String Second = "";
 
 void loop()
 {
-  seconds++;
 
-  if (seconds % 60 == 0)
-  {
-    minutes++;
-    seconds = 0;
+  int reading = digitalRead(buttonPin);
 
-    if (minutes % 60 == 0)
-    {
-      hours++;
-      minutes = 0;
-    }
+  if (reading != lastButtonState) {
+    lastDebounceTime = millis();
   }
 
+  if ((millis() - lastDebounceTime) > debounceDelay) {
 
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  Time = FormatTime();
-  lcd.print(Time);
-  delay(1000);
+    if (reading != buttonState) {
+      buttonState = reading;
+
+      // only toggle the LED if the new button state is HIGH
+      if (buttonState == HIGH) {
+        playing = !playing;
+      }
+    }
+
+  }
+  lastButtonState = reading;
+
+
+
+
+
+
+  if((millis() - start) % 1000 == 0)
+  {
+    if (playing)
+    {
+      seconds++;
+
+      if (seconds % 60 == 0)
+      {
+        minutes++;
+        seconds = 0;
+
+        if (minutes % 60 == 0)
+        {
+          hours++;
+          minutes = 0;
+        }
+      }
+
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      Time = FormatTime();
+      lcd.print(Time);
+    }
+
+  }
 }
 
 
