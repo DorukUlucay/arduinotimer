@@ -2,22 +2,15 @@
 #include <LiquidCrystal_I2C.h>
 
 LiquidCrystal_I2C lcd(0x27, 16, 2);
-
 const int buttonPin = 2;
+const int resetbuttonPin = 4;
 int buttonState = LOW;
+int resetbuttonState = LOW;
 int lastButtonState = LOW;
+int lastResetButtonState = LOW;
 unsigned long lastDebounceTime = 0;
 unsigned long debounceDelay = 50;
 unsigned long start = 0;
-
-void setup()
-{
-  lcd.init();
-  lcd.backlight();
-  pinMode(buttonPin, INPUT);
-  unsigned long start = millis();
-}
-
 bool playing = false;
 int hours = 0;
 int minutes = 0;
@@ -27,9 +20,18 @@ String Hour = "";
 String Minute = "";
 String Second = "";
 
+void setup()
+{
+  lcd.init();
+  lcd.backlight();
+  pinMode(buttonPin, INPUT);
+  pinMode(resetbuttonPin, INPUT);
+  unsigned long start = millis();
+}
+
 void loop()
 {
-
+  //start-stop button
   int reading = digitalRead(buttonPin);
 
   if (reading != lastButtonState) {
@@ -37,25 +39,59 @@ void loop()
   }
 
   if ((millis() - lastDebounceTime) > debounceDelay) {
-
     if (reading != buttonState) {
       buttonState = reading;
 
-      // only toggle the LED if the new button state is HIGH
       if (buttonState == HIGH) {
         playing = !playing;
       }
     }
-
   }
   lastButtonState = reading;
 
 
 
+  //reset the timer button
+  int readingReset = digitalRead(resetbuttonPin);
 
+  if (readingReset != lastResetButtonState) {
+    lastDebounceTime = millis();
+  }
 
+  if ((millis() - lastDebounceTime) > debounceDelay) {
+    if (readingReset != resetbuttonState) {
+      resetbuttonState = readingReset;
 
-  if((millis() - start) % 1000 == 0)
+      if (resetbuttonState == HIGH) {
+        Reset();
+      }
+    }
+  }
+  lastResetButtonState = readingReset;
+
+  Tick();
+}
+
+void Reset()
+{
+  playing = false;
+  hours = 0;
+  seconds = 0;
+  minutes = 0;
+  PrintTime();
+}
+
+void PrintTime()
+{
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  Time = FormatTime();
+  lcd.print(Time);
+}
+
+void Tick()
+{
+  if ((millis() - start) % 1000 == 0)
   {
     if (playing)
     {
@@ -72,16 +108,10 @@ void loop()
           minutes = 0;
         }
       }
-
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      Time = FormatTime();
-      lcd.print(Time);
+      PrintTime();
     }
-
   }
 }
-
 
 String FormatTime()
 {
