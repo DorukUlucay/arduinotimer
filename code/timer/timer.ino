@@ -19,6 +19,7 @@ String Time = "";
 String Hour = "";
 String Minute = "";
 String Second = "";
+String Message = "";
 
 void setup()
 {
@@ -27,10 +28,17 @@ void setup()
   pinMode(buttonPin, INPUT);
   pinMode(resetbuttonPin, INPUT);
   unsigned long start = millis();
+  Serial.begin(9600);
 }
 
 void loop()
 {
+  if(Serial.available())
+  {
+    Message = Serial.readString();
+    delay(1);
+  }
+
   //start-stop button
   int reading = digitalRead(buttonPin);
 
@@ -87,6 +95,8 @@ void PrintTime()
   lcd.setCursor(0, 0);
   Time = FormatTime();
   lcd.print(Time);
+  lcd.setCursor(0, 1);
+  lcd.print(Message);
 }
 
 void Tick()
